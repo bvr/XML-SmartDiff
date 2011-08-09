@@ -5,8 +5,6 @@ package XML::SmartDiff;
 # ABSTRACT: Compares two XML documents smart way
 use Moose;
 
-our $VERSION = '';
-
 use Carp             qw(croak);
 use XML::LibXML;
 use Iterator::Simple qw(iterator);
@@ -15,10 +13,34 @@ use List::MoreUtils  qw(uniq);
 
 use XML::SmartDiff::Change;
 
+=head1 SYNOPSIS
+
+    use XML::SmartDiff;
+
+    my $diff = XML::SmartDiff->new();
+
+    my $it = $diff->compare('file1.xml', 'file2.xml');
+    while(my $change = $it->next) {
+        print $change->to_string;
+    }
+
+=attr target_class
+
+Set class for individual changes. Default to C<XML::SmartDiff::Change>
+
+=cut
+
 has target_class => (
     is      => 'ro',
     default => 'XML::SmartDiff::Change'
 );
+
+=attr parser_options
+
+ArrayRef of options passed to L<XML::LibXML> constructor.
+
+=cut
+
 has parser_options => (
     is      => 'ro',
     isa     => 'ArrayRef',
@@ -168,5 +190,11 @@ sub _detect {
     if(!ref($item) && $item =~ /[<>]/) { return (string   => $item) }
     return                                      (location => $item);
 }
+
+=head1 SEE ALSO
+
+L<XML::LibXML>
+
+=cut
 
 1;

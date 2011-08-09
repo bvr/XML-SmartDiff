@@ -1,5 +1,4 @@
 
-use lib '../lib';
 use Test::More;
 use Data::Dump qw{dump};
 

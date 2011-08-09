@@ -1,0 +1,59 @@
+# NAME
+
+XML::SmartDiff - Compares two XML documents smart way
+
+# VERSION
+
+version 0.001
+
+# SYNOPSIS
+
+    use XML::SmartDiff;
+
+    my $diff = XML::SmartDiff->new();
+
+    my $it = $diff->compare('file1.xml', 'file2.xml');
+    while(my $change = $it->next) {
+        print $change->to_string;
+    }
+
+# ATTRIBUTES
+
+## target_class
+
+Set class for individual changes. Default to `XML::SmartDiff::Change`
+
+## parser_options
+
+ArrayRef of options passed to [XML::LibXML](http://search.cpan.org/perldoc?XML::LibXML) constructor.
+
+# METHODS
+
+## compare
+
+    my $change_it = $diff->compare('filename1.xml', 'filename2.xml');
+    my $change_it = $diff->compare($filehandle1,    $filehandle2);
+    my $change_it = $diff->compare(location => 'filename1.xml', location => 'filename2.xml');
+    my $change_it = $diff->compare(string => '<doc><elem/></doc>', string => '<doc><elem/></doc>');
+
+Returns iterator to compare two XML documents.
+
+## elem_key
+
+Returns string key to identify identical object. Can be subclassed to enable
+different set of elements.
+
+# SEE ALSO
+
+[XML::LibXML](http://search.cpan.org/perldoc?XML::LibXML)
+
+# AUTHOR
+
+Roman Hubacek <roman.hubacek@centrum.cz>
+
+# COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2011 by Roman Hubacek.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
