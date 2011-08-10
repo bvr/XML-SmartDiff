@@ -21,10 +21,11 @@ no Moose::Util::TypeConstraints;
 sub to_string {
     my $self = shift;
 
+    # build a table with results
     my @action = ($self->action);
     my @left   = $self->has_left  ? split(/\n/, _stringify($self->left )) : ();
     my @right  = $self->has_right ? split(/\n/, _stringify($self->right)) : ();
-    my @desc   = ($self->desc);
+    my @desc   = $self->has_desc  ? join(", ", @{$self->desc}) : ();
 
     my $it = natatime 4, zip @action, @left, @right, @desc;
     my $ret = '';
@@ -32,7 +33,8 @@ sub to_string {
         $ret .= sprintf("| %-10s | %-50s | %-50s | %-20s |\n", @blocks);
     }
     $ret .= sprintf("+-%-10s-+-%-50s-+-%-50s-+-%-20s-+\n", "-"x10, "-"x50, "-"x50, "-"x20);
-    $ret;
+
+    return $ret;
 }
 
 sub _stringify {

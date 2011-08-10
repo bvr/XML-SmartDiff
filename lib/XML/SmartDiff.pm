@@ -37,16 +37,24 @@ has target_class => (
 
 =attr parser_options
 
-ArrayRef of options passed to L<XML::LibXML> constructor.
+HashRef of options passed to L<XML::LibXML> constructor.
 
 =cut
 
 has parser_options => (
     is      => 'ro',
-    isa     => 'ArrayRef',
-    default => sub { [line_numbers => 1] }
+    isa     => 'HashRef',
+    default => sub { { line_numbers => 1 } }
 );
 
+=attr include_context
+
+Boolean. Controls whether L</compare> iterator returns also context objects.
+Enabled by default.
+
+=cut
+
+has include_context => (is => 'ro', isa => 'Bool', default => 0);
 
 =method compare
 
@@ -71,9 +79,8 @@ sub compare {
     # open both documents
     my ($d1, $d2);
     try {
-        my $parser = XML::LibXML->new(@{ $self->parser_options });
-        $d1 = $parser->load_xml(@param1)->documentElement;
-        $d2 = $parser->load_xml(@param2)->documentElement;
+        $d1 = XML::LibXML->load_xml(@param1, %{$self->parser_options})->documentElement;
+        $d2 = XML::LibXML->load_xml(@param2, %{$self->parser_options})->documentElement;
     }
     catch {
         croak $_;
@@ -82,9 +89,9 @@ sub compare {
     my $target_class = $self->target_class;
 
     my @process_queue = ( [$d1, $d2] );
-    my @return = ( );
+    my @return = ();
 
-    iterator {
+    my $changes_it = iterator {
         while(1) {
 
             return shift @return if @return;
@@ -109,32 +116,50 @@ sub compare {
             my %c2 = %{ $self->_elements_of($pair->[1]) };
 
             # work on attributes
-            if(my $attr = $self->_attributes_differ(@$pair)) {
+            if(my @attr = $self->_attributes_differ(@$pair)) {
                 push @return,
                     $target_class->new(
                         action => 'change',
                         left   => $pair->[0],
                         right  => $pair->[1],
-                        desc   => $attr,
+                        desc   => [ @attr ],
                     );
             }
 
+            # TODO: check if text differ
+
             # fill process queue with elements
+            # "reverse" is to make sure order of child is kept in the stack
             for my $key (reverse sort +uniq keys(%c1), keys(%c2)) {
                 push @process_queue, [ $c1{$key}, $c2{$key} ];
             }
         }
     };
+
+    return $changes_it unless $self->include_context;
+
+    # iterator to add context items
+    my @current_ctx = ();
+    my @return_ctx  = ();
+    return iterator {
+        while(1) {
+            return shift @return_ctx if @return_ctx;
+
+
+        }
+    }
 }
 
 sub _attributes_differ {
     my ($self, $e1, $e2) = @_;
 
     # TODO: Look for better checking of attribute names
+    my @differ;
     for my $attr (sort +uniq map { $_->nodeName } $e1->attributes, $e2->attributes) {
-        return $attr if ($e1->getAttribute($attr)//'') ne ($e2->getAttribute($attr)//'');
+        push @differ, $attr
+            if ($e1->getAttribute($attr)//'') ne ($e2->getAttribute($attr)//'');
     }
-    return;
+    return @differ;
 }
 
 sub _elements_of {
@@ -160,6 +185,8 @@ different set of elements.
 
 sub elem_key {
     my ($self, $elem) = @_;
+
+    # TODO: probably move this method to a callback with some reasonable default
 
     my $key = $elem->nodeName;
     my $name_attr = $elem->getAttribute('Name');

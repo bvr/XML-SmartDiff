@@ -4,17 +4,21 @@ use Data::Dump qw{dump};
 
 my $a = <<END_XML;
 <doc>
-    <Function Name="A" Desc="This"></Function>
-    <Function Name="D" Desc="This"></Function>
-    <Function Name="B" Desc="This"></Function>
+    <Partition Name="PF">
+        <Function Name="A" Desc="This" Thing="Stuff"></Function>
+        <Function Name="D" Desc="This"></Function>
+        <Function Name="B" Desc="This"></Function>
+    </Partition>
 </doc>
 END_XML
 
 my $b = <<END_XML;
 <doc>
-    <Function Name="A" Desc="That"></Function>
-    <Function Name="B" Desc="That"></Function>
-    <Function Name="C" Desc="That"></Function>
+    <Partition Name="PF">
+        <Function Name="A" Desc="That"></Function>
+        <Function Name="B" Desc="That"></Function>
+        <Function Name="C" Desc="That"></Function>
+    </Partition>
 </doc>
 END_XML
 
