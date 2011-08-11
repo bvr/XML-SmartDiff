@@ -6,7 +6,7 @@ package XML::SmartDiff;
 use Moose;
 
 use Carp             qw(croak);
-use XML::LibXML;
+use XML::LibXML      qw(:libxml);
 use Iterator::Simple qw(iterator);
 use Try::Tiny        qw(try catch);
 use List::MoreUtils  qw(uniq);
@@ -115,8 +115,13 @@ sub compare {
             my %c1 = %{ $self->_elements_of($pair->[0]) };
             my %c2 = %{ $self->_elements_of($pair->[1]) };
 
-            # work on attributes
-            if(my @attr = $self->_attributes_differ(@$pair)) {
+            # work on attributes and text contents
+            my @attr = $self->_attributes_differ(@$pair);
+            if(_text($pair->[0]) ne _text($pair->[1])) {
+                push @attr, 'TEXT';
+            }
+
+            if(@attr) {
                 push @return,
                     $target_class->new(
                         action => 'change',
@@ -125,8 +130,6 @@ sub compare {
                         desc   => [ @attr ],
                     );
             }
-
-            # TODO: check if text differ
 
             # fill process queue with elements
             # "reverse" is to make sure order of child is kept in the stack
@@ -216,6 +219,17 @@ sub _detect {
     if(ref $item eq "GLOB")            { return (IO       => $item) }
     if(!ref($item) && $item =~ /[<>]/) { return (string   => $item) }
     return                                      (location => $item);
+}
+
+# return concatenated child text nodes
+sub _text {
+    my $node = shift;
+    my $text = '';
+    for my $ch ($node->nonBlankChildNodes()) {
+        next unless $ch->nodeType eq XML_TEXT_NODE;
+        $text .= $ch->nodeValue;
+    }
+    return $text;
 }
 
 =head1 SEE ALSO
